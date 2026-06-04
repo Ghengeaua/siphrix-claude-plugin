@@ -1,0 +1,11 @@
+{
+  "name": "siphrix-firewall",
+  "version": "0.1.0",
+  "description": "Gate Claude Code tool calls through the Siphrix AI action firewall. A block-only overlay: Siphrix can add blocks, it never unblocks. Fail-closed when the engine is unavailable.",
+  "author": {
+    "name": "Siphrix"
+  },
+  "homepage": "https://github.com/Ghengeaua/Siphrix",
+  "license": "MIT",
+  "keywords": ["ai-safety", "policy", "firewall", "siphrix", "security"]
+}

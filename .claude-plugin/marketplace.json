@@ -1,0 +1,18 @@
+{
+  "name": "siphrix",
+  "owner": {
+    "name": "Siphrix"
+  },
+  "metadata": {
+    "description": "Official Siphrix plugin marketplace for Claude Code — gate tool calls through the Siphrix AI action firewall."
+  },
+  "plugins": [
+    {
+      "name": "siphrix-firewall",
+      "source": "./siphrix-firewall",
+      "description": "Gate Claude Code tool calls through the Siphrix AI action firewall. A block-only, fail-closed PreToolUse overlay: Siphrix can add blocks, it never unblocks; if the engine is unavailable, the call is blocked.",
+      "version": "0.1.0",
+      "keywords": ["ai-safety", "policy", "firewall", "siphrix", "security"]
+    }
+  ]
+}
