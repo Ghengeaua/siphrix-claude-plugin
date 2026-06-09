@@ -21,6 +21,12 @@ AI web apps (ChatGPT, Claude, Gemini, Copilot, Perplexity) and asks your
   **structured metadata** — the site's domain and an action type such as
   `upload_file` — is sent to your **local** Siphrix service to obtain a
   policy verdict.
+- **Message text is read only locally.** If you have message-blocking
+  rules, the extension reads the text of a message you are about to send
+  to the AI and matches it against **your** rules **in the page**. The
+  message text is **never transmitted anywhere**; only the fact that a
+  block occurred (the rule name and the site) may be recorded for your
+  audit log.
 - **Local storage.** The extension stores your settings and, if you log
   in to your Siphrix account, a **session token**, in the browser's
   extension storage on your device. This information stays on your device
