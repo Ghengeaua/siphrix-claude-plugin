@@ -2,24 +2,34 @@
   <img src="siphrix-firewall/icon.png" alt="Siphrix" width="120">
 </p>
 
-# Siphrix firewall — Claude Code plugin
+# Siphrix — AI Action Monitor — Claude Code plugin
 
-Gate every Claude Code tool call through the **[Siphrix](https://pypi.org/project/siphrix/) AI action firewall**.
+Record and risk-flag every governed Claude Code tool call through the
+**[Siphrix](https://pypi.org/project/siphrix/) AI action monitor**.
 Before Claude Code runs a tool (`Bash`, `Write`, `Edit`, `WebFetch`, …),
-the plugin asks Siphrix for a verdict and **blocks** the call on a
-non-ALLOW verdict.
+the plugin asks Siphrix for a verdict and **records** it — the action
+and its risk level land in the Siphrix audit trail and dashboards
+(Activity for everything, Warnings for risky actions). Audit-first:
+**nothing is blocked by default**. `SIPHRIX_MODE=enforce` enables the
+frozen legacy firewall behaviour.
 
-This repository is the **public install source** for the plugin. The
-Siphrix engine itself ships on PyPI (`pip install siphrix`); this repo
-contains only the Claude Code integration.
+This repository is the **public install source** for the plugin (the
+plugin id stays `siphrix-firewall`, so existing installs keep working).
+The Siphrix engine itself ships on PyPI (`pip install siphrix`); this
+repo contains only the Claude Code integration.
 
 ## Posture
 
-- **Block-only.** Siphrix can *add* a block; it never *grants* a call
-  Claude Code would otherwise gate.
-- **Fail-closed.** If the engine is not importable or evaluation errors,
-  the tool call is **denied** — a firewall that can't reach its engine
-  must not wave actions through.
+- **Audit-first.** Every governed call is evaluated and recorded;
+  BLOCK verdicts are warnings ("what would have been blocked"), not
+  interventions. An observer must not break the thing it observes: in
+  the default mode, internal failures resolve to silence, never to a
+  deny.
+- **Never grants.** On ALLOW the hook stays silent — it never
+  auto-approves a call Claude Code would otherwise gate.
+- **Frozen enforcement opt-in.** `SIPHRIX_MODE=enforce` restores the
+  legacy firewall: a non-ALLOW verdict denies the call, and engine
+  failures deny fail-closed.
 - **Decision-only.** The hook asks for a verdict; it never executes the
   tool. Only the structured action class is sent to Siphrix — no raw
   command body, file content, or path.
@@ -43,8 +53,11 @@ contains only the Claude Code integration.
    hook loads. Toggle with `/plugin disable siphrix-firewall@siphrix` /
    `/plugin enable siphrix-firewall@siphrix`.
 
-3. (Recommended) Point the firewall at a policy — otherwise Siphrix is
-   default-deny (fail-closed) and blocks every governed tool:
+3. (Recommended) Point Siphrix at a policy — without one, every
+   governed call records a fail-closed BLOCK verdict
+   (`policy_empty_allowlist`) that shows up as a warning. In the
+   default audit mode nothing is stopped; under `SIPHRIX_MODE=enforce`
+   it would block every governed tool:
 
    ```bash
    siphrix pack-export --name safe_defaults --output ./policy.yaml
