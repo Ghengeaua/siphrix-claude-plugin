@@ -1,34 +1,47 @@
-# Siphrix — AI Action Monitor — Claude Code plugin
+# Siphrix — Claude Code plugin
 
-Records and risk-flags Claude Code's tool calls through the Siphrix AI
-action monitor. It installs a **PreToolUse hook** that, before Claude
-Code runs a tool, asks Siphrix for a verdict and **records** it — the
-action and its risk level land in the Siphrix audit trail and
-dashboards (Activity for everything, Warnings for risky actions).
-Audit-first: nothing is blocked by default; `SIPHRIX_MODE=enforce`
-enables the frozen legacy firewall behaviour (a non-ALLOW verdict
-denies the call).
+Audits Claude Code's tool calls through the Siphrix AI Action Audit &
+Risk Monitor. It installs a **PreToolUse hook** that, before Claude
+Code runs a tool, asks Siphrix for a verdict and **records** it —
+risky (non-ALLOW) verdicts surface as warnings in the Siphrix views.
+Nothing is blocked by default; blocking is a frozen opt-in
+(`SIPHRIX_MODE=enforce`).
 
-> Installable as a Claude Code plugin via the **`siphrix` marketplace**
-> declared at the repo root (`.claude-plugin/marketplace.json`). See
-> **Install** below. The plugin id stays `siphrix-firewall`, so
-> existing installs keep working.
+## Licence
+
+Two licences, on purpose, and each file says which it carries:
+
+- `hooks/siphrix_firewall.py`, the hook that decides whether an agent's
+  action is recorded, is part of Siphrix and is under the **Business
+  Source License 1.1** (the repository's `LICENSE`; the header of the
+  file says so). The Siphrix engine it delegates to is not distributed
+  with this plugin.
+- Everything else in this folder - the manifest under `.claude-plugin/`,
+  `hooks/hooks.json`, this README and the icon - is **MIT** (the
+  `LICENSE` file beside this README), because the public install
+  repository is MIT and a manifest that says otherwise would contradict
+  the repository it sits in.
+
+This folder is the **only place the plugin is edited**. The public
+install repository, `Ghengeaua/siphrix-claude-plugin`, is a generated
+copy of it, written by `tools/publish_claude_plugin.py` at release
+time — two hand-maintained copies of a hook that decides whether an
+agent's action is recorded had already drifted once, in version and
+licence, before that script existed.
 
 ## Posture (read this first)
 
-- **Audit-first.** Every governed call is evaluated and recorded; a
-  BLOCK verdict is a warning ("what would have been blocked"), not an
-  intervention. An observer must not break the thing it observes: in
-  the default audit mode, internal failures (Siphrix missing,
-  evaluation error, malformed event) resolve to silence, never to a
-  deny.
-- **Never grants.** On ALLOW the hook stays silent and Claude Code's
-  normal permission flow proceeds — it never auto-approves a tool call
-  Claude Code would otherwise have gated.
-- **Frozen enforcement opt-in.** With `SIPHRIX_MODE=enforce` the legacy
-  firewall behaviour returns: a non-ALLOW verdict denies the tool
-  call, and failures deny fail-closed (an enforcing firewall that
-  cannot reach its engine must not wave actions through).
+- **Audit-first overlay.** In the default mode (`SIPHRIX_MODE=audit`)
+  every governed call is evaluated and recorded, risky verdicts feed
+  the Warnings views, and the call always proceeds — an observer must
+  not break the thing it observes. The hook never *grants* a tool call
+  Claude Code would otherwise have gated: on ALLOW it stays silent and
+  Claude Code's normal permission flow proceeds.
+- **Blocking is a frozen opt-in.** Only under `SIPHRIX_MODE=enforce`
+  does a non-ALLOW verdict deny the call, and only there does an
+  unreachable engine (`pip install siphrix` missing) or an evaluation
+  error fail closed. In the default audit mode such internal failures
+  resolve to silence — the call proceeds.
 - **Decision-only.** The hook asks for a verdict; it never executes the
   tool. No raw command body, file content, or path is sent to Siphrix —
   only the structured action class.
@@ -37,20 +50,30 @@ denies the call).
 
 | Claude Code tool | Siphrix action |
 | --- | --- |
-| `Bash` | `shell_command` |
+| `Bash` | `shell_exec` |
 | `Write` / `Edit` / `MultiEdit` / `NotebookEdit` | `file_write` |
-| `Read` | `file_read` |
-| `WebFetch` / `WebSearch` | `http_request` |
+| `Read` / `Glob` / `Grep` | `file_read` |
+| `WebFetch` / `WebSearch` | `network_access` |
 
-Editor-internal / read-meta tools (`Glob`, `Grep`, `LS`, `TodoWrite`,
-`Task`, …) are passed through untouched.
+The actions use the shipped-pack vocabulary, so an exported pack (e.g.
+`dev_agent_defaults`) governs Claude Code with no custom rules. The
+mapping is shared with `siphrix agent-setup` and the settings-snippet
+path — one brain, one vocabulary.
+
+Editor-internal / bookkeeping tools (`LS`, `TodoWrite`, `Task`,
+`ExitPlanMode`, …) are passed through untouched.
+
+> **Easiest install:** run `siphrix agent-setup` — it exports the
+> active policy and registers the same hook brain in your Claude Code
+> `settings.json` in one idempotent step. The marketplace-plugin path
+> below is equivalent for users who prefer Claude Code's plugin
+> manager.
 
 ## Install
 
-The plugin is published through the **`siphrix` marketplace**, whose
-manifest lives at the **repo root** in `.claude-plugin/marketplace.json`
-and points at this folder (`./siphrix-firewall`). You add the
-marketplace, then install the `siphrix-firewall` plugin from it.
+The plugin is published through the **`siphrix` marketplace**. You add
+the marketplace, then install the `siphrix-firewall` plugin from it
+(the id is historical and kept so existing installs keep working).
 
 1. **Install the engine** the hook calls into:
 
@@ -58,14 +81,23 @@ marketplace, then install the `siphrix-firewall` plugin from it.
    pip install siphrix
    ```
 
-2. **Add the marketplace, then install the plugin**, inside Claude Code:
+2. **Add the marketplace, then install the plugin**, inside Claude Code.
 
-   ```text
-   /plugin marketplace add Ghengeaua/siphrix-claude-plugin
-   /plugin install siphrix-firewall@siphrix
-   ```
+   - **From the public install repository** (no GitHub token needed):
 
-   This repository is public, so no GitHub token is required.
+     ```text
+     /plugin marketplace add Ghengeaua/siphrix-claude-plugin
+     /plugin install siphrix-firewall@siphrix
+     ```
+
+   - **From a local clone of this repository** — use the path to the
+     repo root, the folder that contains `.claude-plugin/marketplace.json`,
+     which points at `./tools/claude_code_plugin`:
+
+     ```text
+     /plugin marketplace add <path-to-repo-root>
+     /plugin install siphrix-firewall@siphrix
+     ```
 
    Plugins are enabled on install. Toggle with
    `/plugin disable siphrix-firewall@siphrix` /
@@ -76,7 +108,7 @@ marketplace, then install the `siphrix-firewall` plugin from it.
    > `hooks/siphrix_firewall.py` into your project's `.claude/` and
    > reference the hook there directly.
 
-3. (Recommended) Configure the policy Siphrix evaluates against by
+3. (Recommended) Configure the policy the hook evaluates against by
    pointing `SIPHRIX_POLICY_FILE` at an engine policy YAML — e.g.
    export the shipped `safe_defaults` pack:
 
@@ -85,28 +117,38 @@ marketplace, then install the `siphrix-firewall` plugin from it.
    export SIPHRIX_POLICY_FILE="$PWD/policy.yaml"
    ```
 
-   Without a policy, Siphrix is empty-allowlist: every governed call
-   records a fail-closed BLOCK verdict (`policy_empty_allowlist`),
-   which shows up as a warning. In the default audit mode nothing is
-   stopped; under `SIPHRIX_MODE=enforce` the hook would block every
-   governed tool.
+   Without a policy, Siphrix is empty-allowlist: every governed tool
+   draws a fail-closed BLOCK verdict — recorded as a warning under the
+   default audit mode (nothing is stopped), and acted on only under
+   `SIPHRIX_MODE=enforce`.
 
 ## How it decides
 
-The hook reads the PreToolUse event on stdin and delegates to the
+The hook reads the PreToolUse event on stdin, maps the tool to a
+`claude_code` AI-tool-bridge request, and evaluates it via the
 canonical in-package adapter
-(`siphrix.integrations.claude_code_hook.decide`) — the same brain the
-`siphrix agent-setup` path and the console / VS Code rule overlay
-share — so tool mapping, the shared local rule overlay, policy
-evaluation, and `SIPHRIX_MODE` resolution are all decided in one place,
-and the verdict and risk level reach the audit trail. In the default
-audit mode the call then always proceeds — the hook prints nothing and
-exits 0. Only in the frozen `SIPHRIX_MODE=enforce` mode does the
-adapter return a block, which the hook translates into:
+(`siphrix.integrations.claude_code_hook.decide`) — the verdict is
+recorded and risky verdicts surface as warnings. Only under the frozen
+opt-in `SIPHRIX_MODE=enforce`, when the verdict is not ALLOW, does it
+emit:
 
 ```json
 {"hookSpecificOutput": {"hookEventName": "PreToolUse",
  "permissionDecision": "deny", "permissionDecisionReason": "Siphrix BLOCK: ..."}}
 ```
 
-Otherwise it prints nothing and exits 0.
+Otherwise it prints nothing and exits 0 — the call proceeds through
+Claude Code's normal permission flow.
+
+## Publishing
+
+Never edit the public repository by hand. From this repository run
+
+```bash
+python tools/publish_claude_plugin.py --target ../../siphrix-claude-plugin
+```
+
+which copies this folder over `siphrix-firewall/` there, regenerates
+the public `marketplace.json` from this repo's, and prints what
+changed; then commit and push in that repository. The step sits in
+`docs/release/RELEASE_RUNBOOK.md` with the other channels.

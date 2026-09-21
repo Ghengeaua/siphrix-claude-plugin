@@ -1,11 +1,11 @@
 {
   "name": "siphrix-firewall",
-  "version": "0.1.0",
-  "description": "Siphrix — AI Action Monitor: records and risk-flags every governed tool call; audit-first (never blocks by default; SIPHRIX_MODE=enforce enables the frozen legacy firewall behaviour).",
+  "version": "2.3.0",
+  "description": "Record and risk-rank Claude Code tool calls with the Siphrix AI Action Audit & Risk Monitor. Audit-first overlay: verdicts are recorded and surfaced as warnings; blocking is a frozen opt-in (SIPHRIX_MODE=enforce). Siphrix never unblocks a call Claude Code would have gated.",
   "author": {
     "name": "Siphrix"
   },
-  "homepage": "https://github.com/Ghengeaua/siphrix-claude-plugin",
+  "homepage": "https://siphrix.com",
   "license": "MIT",
-  "keywords": ["ai-safety", "policy", "siphrix", "security"]
+  "keywords": ["ai-safety", "policy", "audit", "monitor", "siphrix", "security"]
 }

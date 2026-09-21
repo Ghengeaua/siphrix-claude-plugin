@@ -4,15 +4,21 @@
     "name": "Siphrix"
   },
   "metadata": {
-    "description": "Official Siphrix plugin marketplace for Claude Code — record and risk-flag tool calls through the Siphrix AI action monitor."
+    "description": "Official Siphrix plugin marketplace — record, risk-rank, and warn on Claude Code tool calls with the Siphrix AI Action Audit & Risk Monitor."
   },
   "plugins": [
     {
       "name": "siphrix-firewall",
       "source": "./siphrix-firewall",
-      "description": "Siphrix — AI Action Monitor: records and risk-flags every governed tool call; audit-first (never blocks by default; SIPHRIX_MODE=enforce enables the frozen legacy firewall behaviour).",
-      "version": "0.1.0",
-      "keywords": ["ai-safety", "policy", "firewall", "siphrix", "security"]
+      "description": "Record and risk-rank Claude Code tool calls with the Siphrix AI Action Audit & Risk Monitor. An audit-first PreToolUse overlay: every governed call is evaluated and recorded, risky verdicts surface as warnings, and nothing is blocked by default — blocking is a frozen opt-in (SIPHRIX_MODE=enforce). Siphrix never unblocks a call Claude Code would have gated.",
+      "version": "2.3.0",
+      "keywords": [
+        "ai-safety",
+        "policy",
+        "firewall",
+        "siphrix",
+        "security"
+      ]
     }
   ]
 }

@@ -1,4 +1,11 @@
 #!/usr/bin/env python3
+# Licence: Business Source License 1.1 - this file is part of Siphrix and
+# carries the repository's licence, not the MIT licence of the plugin
+# scaffolding around it (see ../LICENSE). It is the file that decides
+# whether an agent's action is recorded; that is the product, and the
+# product is BUSL. The manifest, hooks.json, README and icon are MIT so
+# that the public install repository, which is MIT, is not contradicted
+# by the manifest it ships. Decided 2026-09-21.
 """Siphrix PreToolUse hook for Claude Code — audit & risk monitor.
 
 Claude Code invokes this script before it runs a tool. The script
